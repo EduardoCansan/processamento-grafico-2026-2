@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.10)
-project(PGFundamentos)
+project(processamento-grafico-2026-2)
 
 # Define o padrão do C++
 set(CMAKE_CXX_STANDARD 17)
@@ -7,7 +7,9 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # Ativa o FetchContent
 include(FetchContent)
-
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
 # Configura o FetchContent para baixar e compilar GLFW automaticamente
 FetchContent_Declare(
   glfw
