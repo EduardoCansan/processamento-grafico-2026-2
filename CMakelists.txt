@@ -50,6 +50,7 @@ set(EXERCISES
     DoisShaders
     Quadrado
     Triangulo
+    TrianguloInvertido
 
 )
 
