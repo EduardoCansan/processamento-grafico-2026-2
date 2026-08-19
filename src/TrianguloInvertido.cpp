@@ -76,9 +76,9 @@ void inicializaObjetos() {
     // Para isso, nós geramos primeiramente um buffer vazio, através da função glGenBuffers, e então setamos esse buffer como buffer 
     // atual na máquina de estados do OpenGL através de glBindBuffer, e por fim copiamos os pontos para esse buffer através do glBufferData.
     float points[] = {
-        0.0f,  0.5f, 0.0f, // cima
-        0.5f, -0.5f, 0.0f, // direita
-       -0.5f, -0.5f, 0.0f  // esquerda
+        0.0f,  -0.5f, 0.0f, // cima
+        -0.5f, 0.5f, 0.0f, // direita
+        0.5f, 0.5f, 0.0f  // esquerda
     };
 
     GLuint pvbo;
@@ -135,7 +135,7 @@ void inicializaShaders() {
         "out vec3 cores;\n"
         "void main () {\n"
         "    cores = vertex_cores;\n"
-        "    gl_Position = vec4(vertex_posicao.x, vertex_posicao.y*-1.0, vertex_posicao.z, 1.0);\n"
+        "    gl_Position = vec4(vertex_posicao, 1.0);\n"
         "}\n";
 
     // Como os shaders são um programa "a parte", precisamos compilá-lo e verificar se não houve nenhum erro de compilação
