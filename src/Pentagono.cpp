@@ -76,9 +76,31 @@ void inicializaObjetos() {
     // Para isso, nós geramos primeiramente um buffer vazio, através da função glGenBuffers, e então setamos esse buffer como buffer 
     // atual na máquina de estados do OpenGL através de glBindBuffer, e por fim copiamos os pontos para esse buffer através do glBufferData.
     float points[] = {
-        0.0f,  0.5f, 0.0f, // cima
-        0.5f, -0.5f, 0.0f, // direita
-       -0.5f, -0.5f, 0.0f  // esquerda
+
+        // triângulo baixo
+        0.0f,  0.0f, 0.0f, // centro
+        0.5f,-0.5f, 0.0f, // direita baixo
+        -0.5f,-0.5f, 0.0f, // esquerda baixo
+
+        // triângulo direita baixo
+        0.0f,  0.0f, 0.0f, // centro
+        0.67f, 0.57f, 0.0f, // direita cima
+        0.5f,-0.5f, 0.0f, // direita baixo
+
+        // triângulo esquerda baixo
+        0.0f,  0.0f, 0.0f, // centro
+        -0.5f,-0.5f, 0.0f, // esquerda baixo
+        -0.67f, 0.57f, 0.0f, // esquerda cima
+
+        // triângulo direita cima
+        0.0f,  0.0f, 0.0f,   // centro
+        0.0f,  0.93f, 0.0f,   // topo
+        0.67f, 0.57f, 0.0f,   // direita cima
+
+        // triângulo esquerda cima
+        0.0f,  0.0f, 0.0f,   // centro
+        -0.67f, 0.57f, 0.0f,   // esquerda cima
+        0.0f,  0.93f, 0.0f     // topo
     };
 
     GLuint pvbo;
@@ -104,10 +126,31 @@ void inicializaObjetos() {
     // na chamada ao "glEnableVertexAttribArray", pois estamos ativando o segundo atributo deste VAO,
     // que são as cores dos vértices. Além disso, também passamos o parâmetro 1 na chamada ao "glVertexAttribPointer", 
     // pois estamos definindo o layout do segundo atributo.
-    float cores[] = {
-        1.0f, 0.0f, 0.0f, // vermelho
-        0.0f, 1.0f, 0.0f, // verde
-        0.0f, 0.0f, 1.0f  // azul
+    float cores[] = { 
+        // Triângulo 1 - azul
+        0.0f, 0.0f, 1.0f, 
+        0.0f, 0.0f, 1.0f, 
+        0.0f, 0.0f, 1.0f, 
+
+        // Triângulo 2 - verde
+        0.0f, 1.0f, 0.0f, 
+        0.0f, 1.0f, 0.0f, 
+        0.0f, 1.0f, 0.0f, 
+        
+        // Triângulo 3 - vermelho
+        1.0f, 0.0f, 0.0f, 
+        1.0f, 0.0f, 0.0f, 
+        1.0f, 0.0f, 0.0f, 
+        
+        // Triângulo 4 - amarelo
+        1.0f, 1.0f, 0.0f, 
+        1.0f, 1.0f, 0.0f, 
+        1.0f, 1.0f, 0.0f, 
+        
+        // Triângulo 5 - ciano
+        0.0f, 1.0f, 1.0f, 
+        0.0f, 1.0f, 1.0f, 
+        0.0f, 1.0f, 1.0f   
     };
     
     GLuint cvbo;
@@ -212,7 +255,7 @@ void inicializaRenderizacao() {
         glBindVertexArray(Vao);
 
         // Desenhamos o triângulo especificado no vao
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, 15);
 
         // Atualiamos outros eventos, tais como entradas pelo teclado, mouse, etc, caso ocorram
         glfwPollEvents();
