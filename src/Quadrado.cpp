@@ -52,12 +52,28 @@ void inicializaObjetos() {
     // Damos um bind no VAO, setando ele como VAO atual e colocando o mesmo no topo da máquina de estados do OpenGL
     glBindVertexArray(Vao);
 
+    // Importante:
+    // Como você está trabalhando em 2D: Z = 0.0f, logo, todos os vértices do quadrado devem ter Z = 0.0f
+    /*
+                Y
+                ↑
+                |
+    (-1,  1)    |    (1,1)
+                |
+    ----------------+----------→ X
+                |
+                |
+    (-1, -1)    |    (1,-1)
+                |
+    */
+
     // VBO dos vértices
     float points[] = {
         // triângulo 1
 		0.5f, 0.5f, 0.0f,      //vertice superior direito
 		0.5f, -0.5f, 0.0f,     //vertice inferior direito
 		-0.5f, -0.5f, 0.0f,    //vertice inferior esquerdo
+
 		//triângulo 2
 		-0.5f, 0.5f, 0.0f,     //vertice superior esquerdo
 		0.5f, 0.5f, 0.0f,      //vertice superior direito

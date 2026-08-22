@@ -76,14 +76,9 @@ void inicializaObjetos() {
     // Para isso, nós geramos primeiramente um buffer vazio, através da função glGenBuffers, e então setamos esse buffer como buffer 
     // atual na máquina de estados do OpenGL através de glBindBuffer, e por fim copiamos os pontos para esse buffer através do glBufferData.
     float points[] = {
-        // torto
-        // 0.0f,  0.5f, 0.0f,
-        // 0.0f,  -0.5f, 0.0f,
-        // 0.5f, -0.5f, 0.0f,
-        // melhor
-        -0.5f,  0.5f, 0.0f,
-        -0.5f, -0.5f, 0.0f,
-         0.5f, -0.5f, 0.0f
+        0.0f,  0.5f, 0.0f, // cima
+        0.5f, -0.5f, 0.0f, // direita
+       -0.5f, -0.5f, 0.0f  // esquerda
     };
 
     GLuint pvbo;
