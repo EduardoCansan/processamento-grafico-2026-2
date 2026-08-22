@@ -94,13 +94,13 @@ void inicializaObjetos() {
 
         // triângulo direita cima
         0.0f,  0.0f, 0.0f,   // centro
-        0.0f,  0.93f, 0.0f,   // topo
+        0.0f,  1.0f, 0.0f,   // topo
         0.67f, 0.57f, 0.0f,   // direita cima
 
         // triângulo esquerda cima
         0.0f,  0.0f, 0.0f,   // centro
         -0.67f, 0.57f, 0.0f,   // esquerda cima
-        0.0f,  0.93f, 0.0f     // topo
+        0.0f,  1.0f, 0.0f     // topo
     };
 
     GLuint pvbo;
@@ -127,30 +127,23 @@ void inicializaObjetos() {
     // que são as cores dos vértices. Além disso, também passamos o parâmetro 1 na chamada ao "glVertexAttribPointer", 
     // pois estamos definindo o layout do segundo atributo.
     float cores[] = { 
-        // Triângulo 1 - azul
-        0.0f, 0.0f, 1.0f, 
-        0.0f, 0.0f, 1.0f, 
-        0.0f, 0.0f, 1.0f, 
 
-        // Triângulo 2 - verde
-        0.0f, 1.0f, 0.0f, 
-        0.0f, 1.0f, 0.0f, 
-        0.0f, 1.0f, 0.0f, 
-        
-        // Triângulo 3 - vermelho
-        1.0f, 0.0f, 0.0f, 
-        1.0f, 0.0f, 0.0f, 
-        1.0f, 0.0f, 0.0f, 
-        
-        // Triângulo 4 - amarelo
-        1.0f, 1.0f, 0.0f, 
-        1.0f, 1.0f, 0.0f, 
-        1.0f, 1.0f, 0.0f, 
-        
-        // Triângulo 5 - ciano
-        0.0f, 1.0f, 1.0f, 
-        0.0f, 1.0f, 1.0f, 
-        0.0f, 1.0f, 1.0f   
+        // Triangulos todos azuis 5x3 = 15
+        0.0f, 0.0f, 1.0f, 
+        0.0f, 0.0f, 1.0f, 
+        0.0f, 0.0f, 1.0f, 
+        0.0f, 0.0f, 1.0f, 
+        0.0f, 0.0f, 1.0f, 
+        0.0f, 0.0f, 1.0f, 
+        0.0f, 0.0f, 1.0f, 
+        0.0f, 0.0f, 1.0f, 
+        0.0f, 0.0f, 1.0f, 
+        0.0f, 0.0f, 1.0f, 
+        0.0f, 0.0f, 1.0f, 
+        0.0f, 0.0f, 1.0f, 
+        0.0f, 0.0f, 1.0f, 
+        0.0f, 0.0f, 1.0f, 
+        0.0f, 0.0f, 1.0f
     };
     
     GLuint cvbo;
