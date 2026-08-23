@@ -53,6 +53,7 @@ set(EXERCISES
     MeioTriangulo
     TrianguloInvertido
     Pentagono
+    Triforce
 
 )
 
