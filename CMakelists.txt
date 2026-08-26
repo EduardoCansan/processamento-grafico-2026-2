@@ -55,6 +55,7 @@ set(EXERCISES
     Pentagono
     Triforce
     ShaderProgram
+    Ex6
 
 )
 
