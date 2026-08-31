@@ -54,8 +54,8 @@ set(EXERCISES
     TrianguloInvertido
     Pentagono
     Triforce
-    ShaderProgram
-    Ex6
+    ObjetosSeparados
+    CirculoNoQuadrado
 
 )
 
