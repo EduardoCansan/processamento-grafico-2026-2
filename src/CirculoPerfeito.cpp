@@ -5,12 +5,16 @@
 #include <glm/glm.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
+#include <vector>
+#include <cmath>
 
 GLFWwindow* Window = nullptr;
 GLuint Shader_programm = 0;
 GLuint Vao = 0;
 int WIDTH = 800;
 int HEIGHT = 600;
+const int FATIAS = 40;
+const int TOTAL_VERTICES = FATIAS * 3;
 
 // Função callback que é executada sempre que a janela for redimensionada
 // Sempre que a tela for redimensionada, salvamos sua nova largura e altura nas variáveis globais acima
@@ -70,21 +74,76 @@ void inicializaObjetos() {
     // Damos um bind no VAO, setando ele como VAO atual e colocando o mesmo no topo da máquina de estados do OpenGL
     glBindVertexArray(Vao);
 
-    // Definição de um VBO para os vértices do triângulo
-    // - Primeiramente, definimos em um vetor de float os vértices do triângulo;
-    // - Em seguida, criamos uma cópia desses dados na placa gráfica através de uma unidade denominada Vertex Buffer Object (VBO).
-    // Para isso, nós geramos primeiramente um buffer vazio, através da função glGenBuffers, e então setamos esse buffer como buffer 
-    // atual na máquina de estados do OpenGL através de glBindBuffer, e por fim copiamos os pontos para esse buffer através do glBufferData.
-    float points[] = {
-        0.0f,  0.5f, 0.0f, // cima
-        0.5f, -0.5f, 0.0f, // direita
-       -0.5f, -0.5f, 0.0f  // esquerda
-    };
+    /*
+                    Y
+
+                    ↑
+
+                    |
+
+               *    |    *
+
+            *       |       *
+
+        ------------+------------→ X
+
+            *       |       *
+
+               *    |    *
+
+                    |
+
+        O círculo será formado por vários triângulos que
+        compartilham o vértice central (0.0, 0.0, 0.0).
+
+        Os pontos da borda são calculados utilizando:
+
+        x = raio * cos(angulo)
+        y = raio * sin(angulo)
+    */
+
+    // Vetor que armazenará dinamicamente os vértices do círculo
+
+    std::vector<float> points;
+
+    float raio = 0.5f;
+    const float PI = 3.14159265359f;
+
+    // Calcula o incremento do ângulo para cada fatia
+    float incremento = (2.0f * PI) / FATIAS;
+
+    // Geração dos triângulos do círculo
+    for (int i = 0; i < FATIAS; i++) {
+
+        float anguloAtual = i * incremento;
+        float proximoAngulo = (i + 1) * incremento;
+
+        // Vértice central
+        points.push_back(0.0f);
+        points.push_back(0.0f);
+        points.push_back(0.0f);
+
+        // Primeiro ponto da borda
+        float x1 = raio * cos(anguloAtual);
+        float y1 = raio * sin(anguloAtual);
+
+        points.push_back(x1);
+        points.push_back(y1);
+        points.push_back(0.0f);
+
+        // Segundo ponto da borda
+        float x2 = raio * cos(proximoAngulo);
+        float y2 = raio * sin(proximoAngulo);
+
+        points.push_back(x2);
+        points.push_back(y2);
+        points.push_back(0.0f);
+    }
 
     GLuint pvbo;
     glGenBuffers(1, &pvbo);
     glBindBuffer(GL_ARRAY_BUFFER, pvbo);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(points), points, GL_STATIC_DRAW);
+    glBufferData(GL_ARRAY_BUFFER, points.size() * sizeof(float), points.data(), GL_STATIC_DRAW);
     
     // Ativamos o primeiro atributo do VAO (índice 0), que é o atributo referente ao buffer das posições dos vértices.
     glEnableVertexAttribArray(0);
@@ -155,12 +214,11 @@ void inicializaShaders() {
     // - o Fragment Shader é responsável por determinar a cor de cada fragmento da superfície do objeto
     // - a primeira linha especifica a versão da GLSL que estamos utilizando, no caso, 4.0.0
     // - a cor final é determinada pela variável frag_colour, que neste caso é enviada a partir da cor interpolada
-    const char* fragment_shader = 
+    const char* fragment_shader =
         "#version 400\n"
-        "in vec3 cores;\n"
         "out vec4 frag_colour;\n"
         "void main () {\n"
-        "    frag_colour = vec4(cores, 1.0);\n"
+        "    frag_colour = vec4(1.0, 0.0, 0.0, 1.0);\n"
         "}\n";
 
     // Do mesmo modo que o vertex shader, precisamos compilar o fragment shader e verificar se não houve nenhum erro de compilação
@@ -212,7 +270,7 @@ void inicializaRenderizacao() {
         glBindVertexArray(Vao);
 
         // Desenhamos o triângulo especificado no vao
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        glDrawArrays(GL_TRIANGLES, 0, TOTAL_VERTICES);
 
         // Atualiamos outros eventos, tais como entradas pelo teclado, mouse, etc, caso ocorram
         glfwPollEvents();
