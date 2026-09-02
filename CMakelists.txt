@@ -61,7 +61,8 @@ set(EXERCISES
     TransformacaoGeometricaMatriz
     Semana3Ex1
     CameraQuadrado
-    
+    CameraCubo
+    Semana4Ex2
 
 )
 

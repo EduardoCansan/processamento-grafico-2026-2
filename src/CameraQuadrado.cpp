@@ -114,8 +114,8 @@ void inicializaQuadrado() {
 
 void inicializaShader1() {
     // 1. Lê o código dos arquivos externos
-    std::string vertexCode = leShaderDoArquivo("../assets/shaders/4/1/vertex_shader.glsl");
-    std::string fragmentCode = leShaderDoArquivo("../assets/shaders/4/1/fragment_shader.glsl");
+    std::string vertexCode = leShaderDoArquivo("../assets/shaders/4/vertex_shader.glsl");
+    std::string fragmentCode = leShaderDoArquivo("../assets/shaders/4/fragment_shader.glsl");
 
     // 2. Converte de std::string para const char* para o OpenGL ler
     const char* vertex_shader = vertexCode.c_str();
