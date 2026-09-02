@@ -57,6 +57,7 @@ set(EXERCISES
     ObjetosSeparados
     CirculoNoQuadrado
     CirculoPerfeito
+    TransformacaoGeometricaFormula
 
 )
 
