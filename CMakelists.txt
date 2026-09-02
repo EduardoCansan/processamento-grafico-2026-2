@@ -58,6 +58,7 @@ set(EXERCISES
     CirculoNoQuadrado
     CirculoPerfeito
     TransformacaoGeometricaFormula
+    TransformacaoGeometricaMatriz
 
 )
 

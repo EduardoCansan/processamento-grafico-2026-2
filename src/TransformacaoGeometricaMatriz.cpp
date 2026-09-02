@@ -95,8 +95,8 @@ void inicializaQuadrado() {
 
 void inicializaShader1() {
     // 1. Lê o código dos arquivos externos (eles precisam estar na pasta assets/shaders do projeto)
-    std::string vertexCode = leShaderDoArquivo("../assets/shaders/3/1/vertex_shader.glsl");
-    std::string fragmentCode = leShaderDoArquivo("../assets/shaders/3/1/fragment_shader.glsl");
+    std::string vertexCode = leShaderDoArquivo("../assets/shaders/3/2/vertex_shader.glsl");
+    std::string fragmentCode = leShaderDoArquivo("../assets/shaders/3/2/fragment_shader.glsl");
 
     // 2. Converte de std::string para const char* para o OpenGL ler
     const char* vertex_shader = vertexCode.c_str();
@@ -115,7 +115,7 @@ void inicializaShader1() {
         std::cerr << "Erro no vertex shader:\n" << infoLog << std::endl;
     }
 
-    //3. Compila o fragment shader shader
+    //4. Compila o fragment shader shader
     GLuint fs = glCreateShader(GL_FRAGMENT_SHADER);
     glShaderSource(fs, 1, &fragment_shader, NULL);
     glCompileShader(fs);
@@ -137,6 +137,7 @@ void inicializaShader1() {
         glGetProgramInfoLog(Shader_programm, 512, NULL, infoLog);
         std::cerr << "Erro na linkagem do shader:\n" << infoLog << std::endl;
     }
+
 
     glDeleteShader(vs);
     glDeleteShader(fs);
@@ -163,34 +164,32 @@ void inicializaRenderizacao() {
         //enviamos para o shader um valor para a cor
         glUniform4f(corLocalizacao, R, G, B, 1.0);
 
-        //TRANSLAÇÃO
-        //buscamos a localização das variáveis Tx e Ty no shader
-        int TxLocalizacao = glGetUniformLocation(Shader_programm, "Tx");
-        int TyLocalizacao = glGetUniformLocation(Shader_programm, "Ty");
-        //enviamos um valor para Tx e Ty
-        glUniform1f(TxLocalizacao, Tx);
-        glUniform1f(TyLocalizacao, Ty);
 
-        //ESCALA
-        //buscamos a localização das variáveis Sx e Sy no shader
-        int SxLocalizacao = glGetUniformLocation(Shader_programm, "Sx");
-        int SyLocalizacao = glGetUniformLocation(Shader_programm, "Sy");
-        //enviamos um valor para Sx e Sy
-        glUniform1f(SxLocalizacao, Sx);
-        glUniform1f(SyLocalizacao, Sy);
+        //CRIA UMA MATRIZ IDENTIDADE PARA COMEÇAR A ACUMULAR TRANSFORMAÇÕES
+        // Inicializa a Matriz Identidade 4x4
+        glm::mat4 model = glm::mat4(1.0f);
+        
+        //APLICA NA MODEL A TRANSLAÇÃO
+        //MODEL = MODEL * MATRIZ_TRANSLACAO
+        model = glm::translate(model, glm::vec3(Tx, Ty, 0.0f));
 
-        //ROTAÇÃO
-        //buscamos a localização da variável "angulo" no shader
-        int anguloLocalizacao = glGetUniformLocation(Shader_programm, "angulo");
-        //enviamos o valor para 'angulo', convertido para radianos
+        //APLICA NA MODEL UMA ESCALA 
+        //MODEL = MODEL * MATRIZ_TRANSLACAO * MATRIZ_ESCALA
+        model = glm::scale(model, glm::vec3(Sx, Sy, 1.0f));
+
+        //APLICA NA MODEL UMA ROTAÇÃO EM TORNO DE Z
+        //MODEL = MODEL * MATRIZ_TRANSLACAO * MATRIZ_ESCALA * MATRIZ_ROTACAO_Z(angulo)
         angulo = 30*glfwGetTime(); //usamos o TEMPO como angulo
-        std::cout << angulo << std::endl;
-        float radianos = angulo * (M_PI / 180.0);
-        glUniform1f(anguloLocalizacao, radianos);
+        model = glm::rotate(model, glm::radians(angulo), glm::vec3(0.0f, 0.0f, 1.0f));
+
+        //buscamos a localização da "model" no shader
+        int modelLoc = glGetUniformLocation(Shader_programm, "model");
+        //enviamos a "model" do c++ para a "model" do shader
+        glUniformMatrix4fv(modelLoc, 1, GL_FALSE, glm::value_ptr(model));
+
 
         glBindVertexArray(Vao_quadrado);
         glDrawArrays(GL_TRIANGLES, 0, 6);
-
 
         glfwPollEvents();
 
