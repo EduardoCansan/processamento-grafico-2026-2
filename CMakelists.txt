@@ -59,7 +59,7 @@ set(EXERCISES
     CirculoPerfeito
     TransformacaoGeometricaFormula
     TransformacaoGeometricaMatriz
-    Semana3Ex1
+    Orbita
     CameraQuadrado
     CameraCubo
     Semana4Ex2
