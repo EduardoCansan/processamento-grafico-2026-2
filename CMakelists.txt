@@ -65,6 +65,7 @@ set(EXERCISES
     CameraMinimapa
     TexturaEstatica
     TexturaCubo
+    Mjolnir
 
 )
 
