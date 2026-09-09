@@ -221,7 +221,16 @@ void especificaMatrizVisualizacao() {
 void especificaMatrizProjecao() {
     float znear = 0.1f;
     float zfar = 100.0f;
-    float fov = glm::radians(67.0f);
+    float fov;
+
+    // Enquanto Z estiver pressionado, diminui o FOV
+    // causando o efeito de zoom/luneta
+    if (glfwGetKey(Window, GLFW_KEY_Z) == GLFW_PRESS) {
+        fov = glm::radians(20.0f);
+    } else {
+        fov = glm::radians(67.0f);
+    }
+
     float aspecto = (float)WIDTH / (float)HEIGHT;
 
     glm::mat4 projecao = glm::perspective(fov, aspecto, znear, zfar);
@@ -273,7 +282,7 @@ void inicializaRenderizacao() {
     double tempo_anterior = glfwGetTime();
 
     glEnable(GL_DEPTH_TEST);
-    
+
     while (!glfwWindowShouldClose(Window)) {
         double tempo_frame_atual = glfwGetTime();
         Tempo_entre_frames = (float)(tempo_frame_atual - tempo_anterior);
@@ -281,22 +290,72 @@ void inicializaRenderizacao() {
 
         glClearColor(0.2f, 0.3f, 0.3f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-        
+
         glUseProgram(Shader_programm);
-        
+
         trataTeclado();
-        inicializaCamera();
-        
-        glBindVertexArray(Vao);
+        atualizaDirecaoCamera();
 
         glm::mat4 transformacao = glm::mat4(1.0f);
         transformacao = glm::rotate(transformacao, (float)glfwGetTime() * 0.5f, glm::vec3(0.5f, 1.0f, 0.0f));
-        
-        GLint transformLoc = glGetUniformLocation(Shader_programm, "matriz");
-        glUniformMatrix4fv(transformLoc, 1, GL_FALSE, glm::value_ptr(transformacao));
 
+        GLint matrizLoc = glGetUniformLocation(Shader_programm, "matriz");
+        glUniformMatrix4fv(matrizLoc, 1, GL_FALSE, glm::value_ptr(transformacao));
+
+        glBindVertexArray(Vao);
+
+        // 1ª RENDERIZAÇÃO VISÃO PRINCIPAL FPS        
+        glViewport(0, 0, WIDTH, HEIGHT);
+
+        // MATRIZ VIEW FPS
+        glm::mat4 viewFPS = glm::lookAt(Cam_pos, Cam_pos + Cam_front, Cam_up);
+        GLint viewLoc = glGetUniformLocation(Shader_programm, "view");
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewFPS));
+
+        // PROJEÇÃO PERSPECTIVA
+        float fov;
+
+        if (glfwGetKey(Window, GLFW_KEY_Z) == GLFW_PRESS) {
+            fov = glm::radians(20.0f);
+        } else {
+            fov = glm::radians(67.0f);
+        }
+
+        float aspecto = (float)WIDTH / (float)HEIGHT;
+        glm::mat4 projFPS = glm::perspective(fov, aspecto, 0.1f, 100.0f);
+        GLint projLoc = glGetUniformLocation(Shader_programm, "proj");
+
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projFPS));
+        // Desenha a visão principal
         glDrawArrays(GL_TRIANGLES, 0, 36);
 
+        // 2ª Renderização - CÂMERA DO MINIMAPA
+        int tamanhoMinimapa = 200;
+        int margem = 20;
+
+        // Coloca o minimapa no canto superior direito
+        glViewport(WIDTH - tamanhoMinimapa - margem, HEIGHT - tamanhoMinimapa - margem, tamanhoMinimapa, tamanhoMinimapa);
+
+        // Limpa novamente somente a informação de profundidade
+        // antes de desenhar a segunda visão
+        glClear(GL_DEPTH_BUFFER_BIT);
+
+        // Camera Minimapa
+        // Câmera acima do cenário
+        glm::vec3 miniCameraPos = glm::vec3(0.0f, 6.0f, 0.0f);
+        // Centro para onde o minimapa olha
+        glm::vec3 miniCameraTarget = glm::vec3(0.0f, 0.0f, 0.0f);
+        glm::vec3 miniCameraUp = glm::vec3(0.0f, 0.0f, -1.0f);
+
+        glm::mat4 viewMini = glm::lookAt(miniCameraPos, miniCameraTarget, miniCameraUp);
+        glUniformMatrix4fv(viewLoc, 1, GL_FALSE, glm::value_ptr(viewMini));
+
+        // Projeção Ortográfica para o minimapa
+        glm::mat4 projMini = glm::ortho(-3.0f, 3.0f, -3.0f, 3.0f, 0.1f, 100.0f);
+        glUniformMatrix4fv(projLoc, 1, GL_FALSE, glm::value_ptr(projMini));
+
+        // Desenha novamente o MESMO cubo, usando a câmera do minimapa
+        glDrawArrays(GL_TRIANGLES, 0, 36);
         glfwPollEvents();
         glfwSwapBuffers(Window);
     }

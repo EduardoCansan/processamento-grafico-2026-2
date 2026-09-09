@@ -62,7 +62,7 @@ set(EXERCISES
     Orbita
     CameraQuadrado
     CameraCubo
-    Semana4Ex2
+    CameraMinimapa
 
 )
 
