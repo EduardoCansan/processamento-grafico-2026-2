@@ -64,6 +64,7 @@ set(EXERCISES
     CameraCubo
     CameraMinimapa
     TexturaEstatica
+    TexturaCubo
 
 )
 
