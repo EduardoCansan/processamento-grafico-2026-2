@@ -63,6 +63,7 @@ set(EXERCISES
     CameraQuadrado
     CameraCubo
     CameraMinimapa
+    TexturaEstatica
 
 )
 
