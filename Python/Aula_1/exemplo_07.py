@@ -23,11 +23,11 @@ mais_escura = cv2.subtract(imagem, 50)
 # Se um pixel de valor 10 subtrair 50, o valor negativo dá a volta no limite da memória e resulta na cor 216 (quase branco)
 #mais_escura = imagem - 50
 
-if not cv2.imwrite("brilho_mais_50.png", mais_clara):
-    raise OSError("Falha ao salvar brilho_mais_50.png")
+if not cv2.imwrite("assets/brilho_mais_50.png", mais_clara):
+    raise OSError("Falha ao salvar assets/brilho_mais_50.png")
 
-if not cv2.imwrite("brilho_menos_50.png", mais_escura):
-    raise OSError("Falha ao salvar brilho_menos_50.png")
+if not cv2.imwrite("assets/brilho_menos_50.png", mais_escura):
+    raise OSError("Falha ao salvar assets/brilho_menos_50.png")
 
 cv2.imshow("Original", imagem)
 cv2.imshow("Mais clara", mais_clara)

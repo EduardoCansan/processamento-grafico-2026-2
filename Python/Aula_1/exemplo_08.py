@@ -22,8 +22,8 @@ contraste = cv2.addWeighted(
     beta,                   # 5. Valor constante somado ou subtraído ao final
 )
 
-if not cv2.imwrite("contraste.png", contraste):
-    raise OSError("Falha ao salvar contraste.png")
+if not cv2.imwrite("assets/contraste.png", contraste):
+    raise OSError("Falha ao salvar assets/contraste.png")
 
 cv2.imshow("Original", imagem)
 cv2.imshow("Contraste", contraste)

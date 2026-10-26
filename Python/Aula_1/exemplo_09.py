@@ -11,8 +11,8 @@ if imagem is None:
 # Matematicamente, faz a operação (255 - valor do pixel), criando um efeito de negativo
 negativa = cv2.bitwise_not(imagem)
 
-if not cv2.imwrite("imagem_negativa.png", negativa):
-    raise OSError("Falha ao salvar imagem_negativa.png")
+if not cv2.imwrite("assets/imagem_negativa.png", negativa):
+    raise OSError("Falha ao salvar assets/imagem_negativa.png")
 
 cv2.imshow("Original", imagem)
 cv2.imshow("Negativa", negativa)

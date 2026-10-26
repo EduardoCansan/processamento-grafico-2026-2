@@ -18,8 +18,8 @@ limiar_usado, binaria = cv2.threshold(
 
 print("Limiar usado:", limiar_usado)
 
-if not cv2.imwrite("imagem_binaria.png", binaria):
-    raise OSError("Falha ao salvar imagem_binaria.png")
+if not cv2.imwrite("assets/imagem_binaria.png", binaria):
+    raise OSError("Falha ao salvar assets/imagem_binaria.png")
 
 cv2.imshow("Tons de cinza", imagem)
 cv2.imshow("Binaria", binaria)
