@@ -1,0 +1,14 @@
+# Target labels
+ glfw-populate
+# Source files and their labels
+C:/Users/eduar/OneDrive/Área de Trabalho/processamento-grafico-2026-2/build/_deps/glfw-subbuild/CMakeFiles/glfw-populate
+C:/Users/eduar/OneDrive/Área de Trabalho/processamento-grafico-2026-2/build/_deps/glfw-subbuild/CMakeFiles/glfw-populate.rule
+C:/Users/eduar/OneDrive/Área de Trabalho/processamento-grafico-2026-2/build/_deps/glfw-subbuild/CMakeFiles/glfw-populate-complete.rule
+C:/Users/eduar/OneDrive/Área de Trabalho/processamento-grafico-2026-2/build/_deps/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-build.rule
+C:/Users/eduar/OneDrive/Área de Trabalho/processamento-grafico-2026-2/build/_deps/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-configure.rule
+C:/Users/eduar/OneDrive/Área de Trabalho/processamento-grafico-2026-2/build/_deps/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-download.rule
+C:/Users/eduar/OneDrive/Área de Trabalho/processamento-grafico-2026-2/build/_deps/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-install.rule
+C:/Users/eduar/OneDrive/Área de Trabalho/processamento-grafico-2026-2/build/_deps/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-mkdir.rule
+C:/Users/eduar/OneDrive/Área de Trabalho/processamento-grafico-2026-2/build/_deps/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-patch.rule
+C:/Users/eduar/OneDrive/Área de Trabalho/processamento-grafico-2026-2/build/_deps/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-test.rule
+C:/Users/eduar/OneDrive/Área de Trabalho/processamento-grafico-2026-2/build/_deps/glfw-subbuild/glfw-populate-prefix/src/glfw-populate-stamp/glfw-populate-update.rule

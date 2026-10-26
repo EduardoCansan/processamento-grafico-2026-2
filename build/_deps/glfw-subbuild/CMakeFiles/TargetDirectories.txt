@@ -1,0 +1,3 @@
+C:/Users/eduar/OneDrive/Área de Trabalho/processamento-grafico-2026-2/build/_deps/glfw-subbuild/CMakeFiles/glfw-populate.dir
+C:/Users/eduar/OneDrive/Área de Trabalho/processamento-grafico-2026-2/build/_deps/glfw-subbuild/CMakeFiles/edit_cache.dir
+C:/Users/eduar/OneDrive/Área de Trabalho/processamento-grafico-2026-2/build/_deps/glfw-subbuild/CMakeFiles/rebuild_cache.dir
