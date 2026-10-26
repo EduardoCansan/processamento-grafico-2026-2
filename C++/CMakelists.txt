@@ -54,7 +54,22 @@ set(EXERCISES
     TrianguloInvertido
     Pentagono
     Triforce
+<<<<<<< HEAD:C++/CMakelists.txt
     ShaderProgram
+=======
+    ObjetosSeparados
+    CirculoNoQuadrado
+    CirculoPerfeito
+    TransformacaoGeometricaFormula
+    TransformacaoGeometricaMatriz
+    Orbita
+    CameraQuadrado
+    CameraCubo
+    CameraMinimapa
+    TexturaEstatica
+    TexturaCubo
+    Mjolnir
+>>>>>>> d5ab8eaf10ec60851ced9258f291da1d3def3bb6:CMakelists.txt
 
 )
 
