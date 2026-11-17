@@ -1,6 +1,6 @@
 __pycache__/
 *.pyc
-resultados_novos/
-resultados_dev_novos/
-resultados_validacao_novos/
-resultados_teste_novos/
+resultados/
+resultados_dev/
+resultados_validacao/
+resultados_teste/

@@ -44,25 +44,25 @@ Se o dataset estiver em outro lugar, informe o caminho absoluto em `--dados`.
 **1. Explorar o desenvolvimento** (primeiros 10 pares do subconjunto de desenvolvimento):
 
 ```powershell
-python main.py --dados "..\DeepPCB\PCBData" --divisao trainval --etapa desenvolvimento --limite 10 --comparar --saida resultados_dev_novos
+python main.py --dados "..\DeepPCB\PCBData" --divisao trainval --etapa desenvolvimento --limite 10 --comparar --saida resultados_dev
 ```
 
 **2. Processar todo o desenvolvimento** (para observar defeitos e escolher parâmetros):
 
 ```powershell
-python main.py --dados "..\DeepPCB\PCBData" --divisao trainval --etapa desenvolvimento --comparar --saida resultados_dev_novos
+python main.py --dados "..\DeepPCB\PCBData" --divisao trainval --etapa desenvolvimento --comparar --saida resultados_dev
 ```
 
 **3. Validar sem reajustar os parâmetros** (outros 20% de `trainval.txt`):
 
 ```powershell
-python main.py --dados "..\DeepPCB\PCBData" --divisao trainval --etapa validacao --comparar --saida resultados_validacao_novos
+python main.py --dados "..\DeepPCB\PCBData" --divisao trainval --etapa validacao --comparar --saida resultados_validacao
 ```
 
 **4. Avaliação oficial somente após fixar as escolhas** (todos os pares de `test.txt`):
 
 ```powershell
-python main.py --dados "..\DeepPCB\PCBData" --divisao test --comparar --saida resultados_teste_novos
+python main.py --dados "..\DeepPCB\PCBData" --divisao test --comparar --saida resultados_teste
 ```
 
 O corte de desenvolvimento/validação é fixo por posição na lista original: **80% / 20%**, a cada cinco pares. É uma divisão simples e reproduzível; imagens de grupos próximos ainda podem ser semelhantes. `--limite 0` (padrão) significa processar todas as imagens da etapa. Sem `--comparar`, executa apenas a versão geométrica.
@@ -86,7 +86,7 @@ Os parâmetros iniciais ficam no início do `main.py`: `RAIO`, `LIMIAR`, `AREA_M
 
 Para cada versão são gerados `por_imagem.csv`, `deteccoes.csv`, `resumo.json` e amostras visuais em `exemplos/`. Cada exemplo inclui referência, teste, alinhada, diferença, máscara, detecções (caixas vermelhas) e gabarito spur (caixas verdes). `comparacao.json` reúne os dois resumos.
 
-Os arquivos já versionados em `resultados/` e `resultados_teste/` são **históricos, anteriores a esta alteração**. Eles indicavam F1 muito baixo (geométrica: 0,0012 em 500 pares). **Não são resultados da versão nova**; não presumir melhora sem executar novamente a base.
+As pastas `resultados/`, `resultados_dev/`, `resultados_validacao/` e `resultados_teste/` são geradas pelas execuções e não são versionadas. Não presumir melhora sem executar novamente a base.
 
 ## Investigação experimental e entrega
 

@@ -341,7 +341,7 @@ def main():
     parser = argparse.ArgumentParser(
         description="Inspecao classica de esporas - DeepPCB")
     parser.add_argument("--dados", required=True, help="Pasta PCBData do DeepPCB")
-    parser.add_argument("--saida", default="resultados_novos")
+    parser.add_argument("--saida", default="resultados")
     parser.add_argument("--divisao", choices=["trainval", "test"],
                         default="trainval")
     parser.add_argument("--etapa", choices=["desenvolvimento", "validacao"],
