@@ -120,55 +120,77 @@ def preparar(referencia, teste):
 # Detecção de esporas
 # =============================================================================
 
-def detectar(referencia, teste_alinhado, valido, versao="geometrica", limiar=45,
-             area_min=5, area_max=1800, max_lado=100):
-    """Baseline: diferenças absolutas; geométrica: cobre acrescentado e conectado.
-
-    A orientação do cobre (claro/escuro) é estimada SOMENTE pela referência.
-    Não são consultadas anotações nesta função.
-    """
+def detectar(referencia, teste_alinhado, valido, versao="geometrica"):
+    """Detecta candidatos com processamento classico, sem consultar anotacoes."""
+    # Aula_3/exemplos/exemplo_13_movimento.py, linhas 41-50: absdiff + threshold.
+    # Aula_1/exemplos/exemplo_10.py, linhas 12-17: limiarizacao binaria.
     diferenca = cv2.absdiff(referencia, teste_alinhado)
-    _, mascara_dif = cv2.threshold(diferenca, limiar, 255, cv2.THRESH_BINARY)
-    mascara_dif = cv2.bitwise_and(mascara_dif, valido)
-    kernel = np.ones((3, 3), np.uint8)
-    mascara_dif = cv2.morphologyEx(mascara_dif, cv2.MORPH_OPEN, kernel)
+    _, mascara = cv2.threshold(diferenca, LIMIAR, 255, cv2.THRESH_BINARY)
+    mascara = cv2.bitwise_and(mascara, valido)
 
+    # Sem abertura 3x3: ela pode apagar esporas muito pequenas.
+    # Verificar essa escolha nas imagens de desenvolvimento.
     if versao == "geometrica":
-        _, ref_otsu = cv2.threshold(referencia, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        _, tst_otsu = cv2.threshold(teste_alinhado, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
-        # A classe menos frequente da referência corresponde aproximadamente ao cobre.
-        if np.count_nonzero(ref_otsu) > ref_otsu.size / 2:
-            ref_otsu = cv2.bitwise_not(ref_otsu)
-            tst_otsu = cv2.bitwise_not(tst_otsu)
-        acrescimo = cv2.bitwise_and(tst_otsu, cv2.bitwise_not(ref_otsu))
-        mascara = cv2.bitwise_and(acrescimo, mascara_dif)
-        mascara = cv2.morphologyEx(mascara, cv2.MORPH_CLOSE, kernel)
+        # Implementacao propria para DeepPCB: cobre acrescentado perto de
+        # uma trilha da referencia. Nao e uma classificacao perfeita de spur.
+        # O MESMO limiar de Otsu e usado nas duas imagens.
+        limiar_cobre, ref_cobre = cv2.threshold(
+            referencia, 0, 255, cv2.THRESH_BINARY + cv2.THRESH_OTSU)
+        _, teste_cobre = cv2.threshold(
+            teste_alinhado, limiar_cobre, 255, cv2.THRESH_BINARY)
+        if not COBRE_CLARO:
+            # Aula_1/exemplos/exemplo_09.py, linha 12: bitwise_not.
+            ref_cobre = cv2.bitwise_not(ref_cobre)
+            teste_cobre = cv2.bitwise_not(teste_cobre)
+        acrescimo = cv2.bitwise_and(teste_cobre, cv2.bitwise_not(ref_cobre))
+        mascara = cv2.bitwise_and(mascara, acrescimo)
         mascara = cv2.bitwise_and(mascara, valido)
-        vizinhanca = cv2.dilate(ref_otsu, kernel, iterations=2)
+        borda_trilha = cv2.dilate(ref_cobre, np.ones((3, 3), np.uint8),
+                                  iterations=1)
     else:
-        mascara = mascara_dif
-        vizinhanca = None
+        borda_trilha = None
 
-    total, rotulos, stats, _ = cv2.connectedComponentsWithStats(mascara, 8)
+    # Aula_3/exemplos/exemplo_15_caixas_movimento.py, linhas 51-62:
+    # contornos sao uma alternativa; mantemos componentes para contar pixels
+    # pequenos (contourArea nao corresponde a quantidade de pixels).
+    total, rotulos, medidas, _ = cv2.connectedComponentsWithStats(mascara, 8)
     deteccoes = []
     for i in range(1, total):
-        x, y, w, h, area = map(int, stats[i])
-        if not area_min <= area <= area_max or max(w, h) > max_lado:
+        x, y, largura, altura, area = map(int, medidas[i])
+        if not AREA_MIN <= area <= AREA_MAX or max(largura, altura) > MAX_LADO:
             continue
-        recorte = rotulos[y:y+h, x:x+w] == i
+        pixels = rotulos[y:y+altura, x:x+largura] == i
+
         if versao == "geometrica":
-            # Espora é crescimento de cobre que encosta numa trilha existente.
-            contato = np.count_nonzero(recorte & (vizinhanca[y:y+h, x:x+w] > 0))
-            if contato == 0:
+            # Uma espora deve ser uma protuberancia curta junto ao cobre.
+            contato = np.count_nonzero(
+                pixels & (borda_trilha[y:y+altura, x:x+largura] > 0))
+            if contato == 0 or min(largura, altura) < 2:
                 continue
-            # Uma estrutura muito extensa é menos típica de uma espora curta.
-            if min(w, h) < 2 or max(w, h) / max(1, min(w, h)) > 7:
+            if max(largura, altura) / min(largura, altura) > 7:
                 continue
-        # É uma medida de resposta, NÃO probabilidade calibrada de spur.
-        resposta = float(np.mean(diferenca[y:y+h, x:x+w][recorte]) / 255)
-        deteccoes.append({"bbox": (x, y, x+w, y+h), "area": area,
-                          "largura": w, "altura": h, "resposta": round(resposta, 4)})
+
+        resposta = float(np.mean(diferenca[y:y+altura, x:x+largura][pixels]) / 255)
+        deteccoes.append({
+            "bbox": (x, y, x + largura, y + altura),
+            "area": area, "largura": largura, "altura": altura,
+            "resposta": round(resposta, 4)
+        })
     return deteccoes, diferenca, mascara
+
+
+def converter_caixas_para_teste(deteccoes, dx, dy, largura, altura):
+    """Converte caixas da imagem alinhada para o teste original."""
+    resultado = []
+    for det in deteccoes:
+        x1, y1, x2, y2 = det["bbox"]
+        x1 = max(0, min(largura, x1 - dx))
+        x2 = max(0, min(largura, x2 - dx))
+        y1 = max(0, min(altura, y1 - dy))
+        y2 = max(0, min(altura, y2 - dy))
+        if x2 > x1 and y2 > y1:
+            resultado.append({**det, "bbox": (x1, y1, x2, y2)})
+    return resultado
 
 
 # =============================================================================
@@ -184,7 +206,7 @@ def iou(a, b):
     return inter / (aa + bb - inter) if aa + bb - inter else 0.0
 
 
-def avaliar(deteccoes, anotacoes, iou_min=0.33):
+def avaliar(deteccoes, anotacoes, iou_min=IOU_MIN):
     """Casamento 1:1, greedy por IoU, apenas com gabaritos spur.
 
     Defeitos de outras classes NÃO são convertidos em positivos.
@@ -195,7 +217,7 @@ def avaliar(deteccoes, anotacoes, iou_min=0.33):
     for i, det in enumerate(deteccoes):
         for j, caixa in enumerate(gt):
             valor = iou(det["bbox"], caixa)
-            if valor >= iou_min:
+            if valor > iou_min:
                 pares.append((valor, i, j))
     usados_d, usados_g = set(), set()
     for _, i, j in sorted(pares, reverse=True):
