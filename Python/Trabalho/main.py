@@ -11,6 +11,13 @@ import numpy as np
 
 SPUR = 4
 
+
+def carregar_imagem(caminho, modo=cv2.IMREAD_GRAYSCALE):
+    """Carrega imagens mesmo quando o caminho contém caracteres Unicode no Windows."""
+    dados = np.fromfile(str(caminho), dtype=np.uint8)
+    return cv2.imdecode(dados, modo)
+
+
 # =============================================================================
 # Leitura do conjunto de dados
 # =============================================================================
@@ -238,8 +245,8 @@ def executar(args):
         tp = fp = fn = 0
         tempos = []
         for indice, (nome, ref_path, tst_path, anot_path) in enumerate(pares):
-            ref = cv2.imread(str(ref_path), cv2.IMREAD_GRAYSCALE)
-            tst = cv2.imread(str(tst_path), cv2.IMREAD_GRAYSCALE)
+            ref = carregar_imagem(ref_path)
+            tst = carregar_imagem(tst_path)
             if ref is None or tst is None:
                 raise FileNotFoundError(f"Par ausente: {ref_path} / {tst_path}")
             anotacoes = ler_anotacoes(anot_path)

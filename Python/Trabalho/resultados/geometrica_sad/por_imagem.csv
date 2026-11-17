@@ -1,0 +1,11 @@
+imagem,versao,alinhamento,dx,dy,custo_registro,gt_spur,detectados,tp,fp,fn,tempo_ms
+20085000,geometrica,sad,0,4,0.702,2,2,0,2,2,20.937
+20085001,geometrica,sad,0,0,1.263,1,1,0,1,1,18.592
+20085002,geometrica,sad,0,0,1.09,1,1,0,1,1,19.634
+20085003,geometrica,sad,0,0,1.973,2,3,0,3,2,20.022
+20085004,geometrica,sad,0,0,1.787,2,2,0,2,2,18.244
+20085005,geometrica,sad,1,0,1.701,2,7,0,7,2,18.895
+20085006,geometrica,sad,1,0,1.419,1,2,0,2,1,18.502
+20085007,geometrica,sad,0,0,0.892,1,1,0,1,1,22.98
+20085008,geometrica,sad,0,0,0.607,0,0,0,0,0,20.239
+20085009,geometrica,sad,0,0,1.52,2,4,0,4,2,20.084
