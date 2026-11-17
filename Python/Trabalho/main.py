@@ -233,15 +233,18 @@ def avaliar(deteccoes, anotacoes, iou_min=IOU_MIN):
 
 def salvar_imagens(destino, referencia, teste, alinhada, diferenca, mascara, dets, anotacoes):
     destino.mkdir(parents=True, exist_ok=True)
-    vis = cv2.cvtColor(alinhada, cv2.COLOR_GRAY2BGR)
+    # Aula_3/exemplos/exemplo_15_caixas_movimento.py, linhas 64-67:
+    # desenha caixas na imagem de TESTE ORIGINAL.
+    vis = cv2.cvtColor(teste, cv2.COLOR_GRAY2BGR)
     for d in dets:
         x1, y1, x2, y2 = d["bbox"]
         cv2.rectangle(vis, (x1, y1), (x2, y2), (0, 0, 255), 2)
-    gt_vis = cv2.cvtColor(alinhada, cv2.COLOR_GRAY2BGR)
+    gt_vis = cv2.cvtColor(teste, cv2.COLOR_GRAY2BGR)
     for a in anotacoes:
         if a["classe"] == SPUR:
             x1, y1, x2, y2 = a["bbox"]
             cv2.rectangle(gt_vis, (x1, y1), (x2, y2), (0, 255, 0), 2)
+    # Aula_1/atividade_01/atividade_01.py, linhas 33-41: salvar imagens.
     for nome, img in [("referencia", referencia), ("teste", teste),
                       ("alinhada", alinhada), ("diferenca", diferenca),
                       ("mascara", mascara), ("deteccoes", vis), ("gabarito_spur", gt_vis)]:
@@ -257,15 +260,19 @@ def executar(args):
     saida = Path(args.saida).resolve()
     saida.mkdir(parents=True, exist_ok=True)
     pares = ler_lista(raiz, args.divisao)
+    if args.divisao == "trainval":
+        # Separacao fixa: a cada cinco pares, um e reservado para validacao.
+        # O gabarito nunca e usado para selecionar candidatos na deteccao.
+        pares = [par for i, par in enumerate(pares)
+                 if (i % 5 == 0) == (args.etapa == "validacao")]
     if args.limite > 0:
         pares = pares[:args.limite]
     if not pares:
         raise RuntimeError("Lista vazia")
-    configuracoes = ([("baseline", "sad"), ("geometrica", "sad")]
-                     if args.comparar else [(args.versao, args.alinhamento)])
+    configuracoes = (["baseline", "geometrica"] if args.comparar else ["geometrica"])
     resumo = {}
-    for versao, metodo in configuracoes:
-        pasta = saida / (versao + "_" + metodo)
+    for versao in configuracoes:
+        pasta = saida / (versao + "_sad")
         pasta.mkdir(parents=True, exist_ok=True)
         linhas = []
         detalhes = []
@@ -277,15 +284,24 @@ def executar(args):
             if ref is None or tst is None:
                 raise FileNotFoundError(f"Par ausente: {ref_path} / {tst_path}")
             anotacoes = ler_anotacoes(anot_path)
+            if ref.shape != tst.shape:
+                raise ValueError(f"Imagens com dimensoes diferentes: {nome}")
+            # Aula_3/exemplos/exemplo_09_desempenho.py, linhas 26-35:
+            # mede o tempo de alinhamento e deteccao em milissegundos.
             inicio = time.perf_counter()
-            alinhada, valido, dx, dy, custo = preparar(ref, tst, metodo=metodo, raio=args.raio)
-            dets, diferenca, mascara = detectar(ref, alinhada, valido, versao=versao,
-                                                 limiar=args.limiar, area_min=args.area_min)
+            alinhada, valido, dx, dy, custo = preparar(ref, tst)
+            dets_alinhadas, diferenca, mascara = detectar(
+                ref, alinhada, valido, versao=versao)
+            dets = converter_caixas_para_teste(
+                dets_alinhadas, dx, dy, tst.shape[1], tst.shape[0])
             tempo = (time.perf_counter() - inicio) * 1000
-            t, f, n = avaliar(dets, anotacoes, iou_min=args.iou)
-            tp += t; fp += f; fn += n
+            # Anotacoes so entram na avaliacao, nunca no detector.
+            t, f, n = avaliar(dets, anotacoes)
+            tp += t
+            fp += f
+            fn += n
             tempos.append(tempo)
-            linhas.append({"imagem": nome, "versao": versao, "alinhamento": metodo,
+            linhas.append({"imagem": nome, "versao": versao, "alinhamento": "sad",
                            "dx": dx, "dy": dy, "custo_registro": round(custo, 3),
                            "gt_spur": sum(a["classe"] == SPUR for a in anotacoes),
                            "detectados": len(dets), "tp": t, "fp": f, "fn": n,
@@ -306,11 +322,14 @@ def executar(args):
         info = {"imagens": len(linhas), "tp": tp, "fp": fp, "fn": fn,
                 "precisao": round(precisao, 4), "recall": round(recall, 4),
                 "f1": round(f1, 4), "tempo_medio_ms": round(float(np.mean(tempos)), 3),
-                "parametros": {"limiar": args.limiar, "area_min": args.area_min,
-                               "raio": args.raio, "iou_min": args.iou}}
+                "divisao": args.divisao,
+                "etapa": args.etapa if args.divisao == "trainval" else "teste",
+                "parametros": {"limiar": LIMIAR, "area_min": AREA_MIN,
+                               "raio": RAIO, "iou_min": IOU_MIN,
+                               "cobre_claro": COBRE_CLARO}}
         (pasta / "resumo.json").write_text(json.dumps(info, indent=2, ensure_ascii=False), encoding="utf-8")
-        resumo[versao + "_" + metodo] = info
-        print(f"{versao} / {metodo}: " + json.dumps(info, ensure_ascii=False))
+        resumo[versao + "_sad"] = info
+        print(f"{versao} / sad: " + json.dumps(info, ensure_ascii=False))
     (saida / "comparacao.json").write_text(json.dumps(resumo, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
@@ -319,32 +338,24 @@ def executar(args):
 # =============================================================================
 
 def main():
-    parser = argparse.ArgumentParser(description="Inspeção clássica de esporas - DeepPCB")
-
-    # Caminhos e seleção do conjunto de dados
-    parser.add_argument("--dados", required=True, help="Pasta PCBData original do DeepPCB")
-    parser.add_argument("--saida", default="resultados")
-    parser.add_argument("--divisao", choices=["trainval", "test"], default="trainval")
-    parser.add_argument("--limite", type=int, default=0, help="0 = todas as imagens da divisão")
-    parser.add_argument("--salvar-exemplos", type=int, default=8)
-
-    # Estratégias de detecção e alinhamento
-    parser.add_argument("--comparar", action="store_true", help="Baseline x geométrica (mesmo SAD)")
-    parser.add_argument("--versao", choices=["baseline", "geometrica"], default="geometrica")
-    parser.add_argument("--alinhamento", choices=["sad", "ssd"], default="sad")
-
-    # Parâmetros numéricos do processamento e da avaliação
-    parser.add_argument("--raio", type=int, default=4)
-    parser.add_argument("--limiar", type=int, default=45)
-    parser.add_argument("--area-min", type=int, default=5)
-    parser.add_argument("--iou", type=float, default=0.33)
-
+    parser = argparse.ArgumentParser(
+        description="Inspecao classica de esporas - DeepPCB")
+    parser.add_argument("--dados", required=True, help="Pasta PCBData do DeepPCB")
+    parser.add_argument("--saida", default="resultados_novos")
+    parser.add_argument("--divisao", choices=["trainval", "test"],
+                        default="trainval")
+    parser.add_argument("--etapa", choices=["desenvolvimento", "validacao"],
+                        default="desenvolvimento",
+                        help="Subconjunto de trainval; ignorado se --divisao test")
+    parser.add_argument("--limite", type=int, default=0,
+                        help="0 = todas as imagens do subconjunto")
+    parser.add_argument("--comparar", action="store_true",
+                        help="Comparar baseline e geometrica com SAD")
+    parser.add_argument("--salvar-exemplos", type=int, default=SALVAR_EXEMPLOS)
     args = parser.parse_args()
 
-    # Validação dos valores recebidos
-    if args.raio < 0 or args.limiar not in range(256) or args.area_min < 1 or not (0 <= args.iou <= 1):
-        parser.error("Parâmetros inválidos")
-
+    if args.limite < 0 or args.salvar_exemplos < 0:
+        parser.error("--limite e --salvar-exemplos devem ser >= 0")
     executar(args)
 
 
