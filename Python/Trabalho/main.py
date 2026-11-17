@@ -1,18 +1,22 @@
-"""Grupo 16: detector clássico de esporas no DeepPCB (sem treinamento de rede neural)."""
+# =============================================================================
+# Importação e configuração geral
+# =============================================================================
 import argparse
 import csv
 import json
 import time
 from pathlib import Path
-
 import cv2
 import numpy as np
 
 SPUR = 4
 
+# =============================================================================
+# Leitura do conjunto de dados
+# =============================================================================
 
 def ler_lista(raiz, divisao):
-    """A lista oficial usa caminhos *.jpg sem _test; eles indicam o identificador do par."""
+    # A lista oficial usa caminhos *.jpg sem _test; eles indicam o identificador do par.
     lista = raiz / ("trainval.txt" if divisao == "trainval" else "test.txt")
     if not lista.is_file():
         raise FileNotFoundError(f"Lista oficial ausente: {lista}")
@@ -32,7 +36,7 @@ def ler_lista(raiz, divisao):
 
 
 def ler_anotacoes(arquivo):
-    """Cada linha DeepPCB: x1 y1 x2 y2 id_classe (id spur = 4)."""
+    # Cada linha DeepPCB: x1 y1 x2 y2 id_classe (id spur = 4).
     caixas = []
     if not arquivo.is_file():
         raise FileNotFoundError(f"Anotação ausente: {arquivo}")
@@ -46,6 +50,10 @@ def ler_anotacoes(arquivo):
         caixas.append({"bbox": (x1, y1, x2, y2), "classe": classe})
     return caixas
 
+
+# =============================================================================
+# Alinhamento e preparação das imagens
+# =============================================================================
 
 def alinhar_busca_local(referencia, teste, raio=4, passo=3, metodo="sad"):
     """Busca exaustiva de translação (dx,dy) minimizando SAD ou SSD.
@@ -95,6 +103,10 @@ def preparar(referencia, teste, metodo="sad", raio=4):
                             flags=cv2.INTER_NEAREST, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
     return alinhada, valido, dx, dy, custo
 
+
+# =============================================================================
+# Detecção de esporas
+# =============================================================================
 
 def detectar(referencia, teste_alinhado, valido, versao="geometrica", limiar=45,
              area_min=5, area_max=1800, max_lado=100):
@@ -147,6 +159,10 @@ def detectar(referencia, teste_alinhado, valido, versao="geometrica", limiar=45,
     return deteccoes, diferenca, mascara
 
 
+# =============================================================================
+# Avaliação dos resultados
+# =============================================================================
+
 def iou(a, b):
     x1, y1 = max(a[0], b[0]), max(a[1], b[1])
     x2, y2 = min(a[2], b[2]), min(a[3], b[3])
@@ -177,6 +193,10 @@ def avaliar(deteccoes, anotacoes, iou_min=0.33):
     return len(usados_d), len(deteccoes) - len(usados_d), len(gt) - len(usados_g)
 
 
+# =============================================================================
+# Geração das imagens de saída
+# =============================================================================
+
 def salvar_imagens(destino, referencia, teste, alinhada, diferenca, mascara, dets, anotacoes):
     destino.mkdir(parents=True, exist_ok=True)
     vis = cv2.cvtColor(alinhada, cv2.COLOR_GRAY2BGR)
@@ -193,6 +213,10 @@ def salvar_imagens(destino, referencia, teste, alinhada, diferenca, mascara, det
                       ("mascara", mascara), ("deteccoes", vis), ("gabarito_spur", gt_vis)]:
         cv2.imwrite(str(destino / (nome + ".png")), img)
 
+
+# =============================================================================
+# Execução do experimento e exportação dos resultados
+# =============================================================================
 
 def executar(args):
     raiz = Path(args.dados).resolve()
@@ -256,25 +280,40 @@ def executar(args):
     (saida / "comparacao.json").write_text(json.dumps(resumo, indent=2, ensure_ascii=False), encoding="utf-8")
 
 
+# =============================================================================
+# Interface de linha de comando
+# =============================================================================
+
 def main():
     parser = argparse.ArgumentParser(description="Inspeção clássica de esporas - DeepPCB")
+
+    # Caminhos e seleção do conjunto de dados
     parser.add_argument("--dados", required=True, help="Pasta PCBData original do DeepPCB")
     parser.add_argument("--saida", default="resultados")
     parser.add_argument("--divisao", choices=["trainval", "test"], default="trainval")
     parser.add_argument("--limite", type=int, default=0, help="0 = todas as imagens da divisão")
     parser.add_argument("--salvar-exemplos", type=int, default=8)
+
+    # Estratégias de detecção e alinhamento
     parser.add_argument("--comparar", action="store_true", help="Baseline x geométrica (mesmo SAD)")
     parser.add_argument("--versao", choices=["baseline", "geometrica"], default="geometrica")
     parser.add_argument("--alinhamento", choices=["sad", "ssd"], default="sad")
+
+    # Parâmetros numéricos do processamento e da avaliação
     parser.add_argument("--raio", type=int, default=4)
     parser.add_argument("--limiar", type=int, default=45)
     parser.add_argument("--area-min", type=int, default=5)
     parser.add_argument("--iou", type=float, default=0.33)
+
     args = parser.parse_args()
+
+    # Validação dos valores recebidos
     if args.raio < 0 or args.limiar not in range(256) or args.area_min < 1 or not (0 <= args.iou <= 1):
         parser.error("Parâmetros inválidos")
+
     executar(args)
 
 
+# Ponto de entrada do programa
 if __name__ == "__main__":
     main()
