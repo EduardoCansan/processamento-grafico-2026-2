@@ -9,11 +9,24 @@ from pathlib import Path
 import cv2
 import numpy as np
 
-SPUR = 4
+SPUR = 4  # Classe espora do DeepPCB.
+# Valores iniciais; ajustar somente em imagens de trainval.
+RAIO = 4
+LIMIAR = 45
+AREA_MIN = 5
+AREA_MAX = 1800
+MAX_LADO = 100
+IOU_MIN = 0.33
+SALVAR_EXEMPLOS = 8
+
+# Hipotese de polaridade do cobre: conferir visualmente em trainval.
+# True = cobre claro; False = cobre escuro. Nao calibrar pelo test.txt.
+COBRE_CLARO = True
 
 
 def carregar_imagem(caminho, modo=cv2.IMREAD_GRAYSCALE):
-    """Carrega imagens mesmo quando o caminho contém caracteres Unicode no Windows."""
+    # Aula_1/atividade_01/atividade_01.py, linhas 9-12: leitura/validacao.
+    # Adaptacao com NumPy para suportar caminhos Unicode no Windows.
     dados = np.fromfile(str(caminho), dtype=np.uint8)
     return cv2.imdecode(dados, modo)
 
@@ -34,11 +47,12 @@ def ler_lista(raiz, divisao):
         imagem_rel, anotacao_rel = linha.split()[:2]
         caminho = Path(imagem_rel)
         base = caminho.stem
+        nome = str(caminho.with_suffix("")).replace("\\", "__").replace("/", "__")
         pasta = raiz / caminho.parent
         teste = pasta / f"{base}_test.jpg"
         referencia = pasta / f"{base}_temp.jpg"
         anotacao = raiz / anotacao_rel
-        pares.append((base, referencia, teste, anotacao))
+        pares.append((nome, referencia, teste, anotacao))
     return pares
 
 
@@ -62,54 +76,45 @@ def ler_anotacoes(arquivo):
 # Alinhamento e preparação das imagens
 # =============================================================================
 
-def alinhar_busca_local(referencia, teste, raio=4, passo=3, metodo="sad"):
-    """Busca exaustiva de translação (dx,dy) minimizando SAD ou SSD.
-
-    Para cada deslocamento, compara as mesmas regiões válidas de referência/teste.
-    O cálculo é desenvolvido aqui: NÃO usa alignECC nem matchTemplate.
-    A borda de largura `raio` é excluída para que todas as hipóteses
-    tenham exatamente o mesmo número de pixels na função de custo.
-    """
+def alinhar_busca_local(referencia, teste, raio=RAIO, passo=3):
+    """Implementacao propria: busca translação por SAD, devolve dx, dy, custo."""
+    # Aula_2/exemplo_01_correlacao_manual.py, linhas 26-41: referencia de loops.
+    # Aula_3/exemplos/exemplo_10_benchmark.py, linhas 35-44: NumPy em lote.
+    # A correlacao da Aula 2 NAO substitui a busca por translacao exigida.
     if referencia.shape != teste.shape:
         raise ValueError("As imagens do par devem ter o mesmo tamanho")
-    h, w = referencia.shape
-    if h <= 2 * raio or w <= 2 * raio:
-        raise ValueError("Imagem muito pequena para o raio de busca")
-    ys = slice(raio, h - raio, passo)
-    xs = slice(raio, w - raio, passo)
-    ref = referencia[ys, xs].astype(np.int16)
-    melhor = (float("inf"), 0, 0)
+    altura, largura = referencia.shape
+    if raio < 0 or passo < 1 or altura <= 2 * raio or largura <= 2 * raio:
+        raise ValueError("Raio/passo incompativel com as imagens")
+
+    amostra_ref = referencia[raio:altura-raio:passo,
+                             raio:largura-raio:passo].astype(np.float32)
+    menor_custo = float("inf")
+    melhor_dx = melhor_dy = 0
     for dy in range(-raio, raio + 1):
         for dx in range(-raio, raio + 1):
-            amostra = teste[raio - dy:h - raio - dy:passo,
-                            raio - dx:w - raio - dx:passo].astype(np.int16)
-            delta = ref.astype(np.float32) - amostra.astype(np.float32)
-            custo = np.mean(np.abs(delta) if metodo == "sad" else delta * delta)
-            if custo < melhor[0]:
-                melhor = (float(custo), dx, dy)
-    _, dx, dy = melhor
+            amostra_teste = teste[raio-dy:altura-raio-dy:passo,
+                                  raio-dx:largura-raio-dx:passo].astype(np.float32)
+            custo = float(np.mean(np.abs(amostra_ref - amostra_teste)))
+            if custo < menor_custo:
+                menor_custo = custo
+                melhor_dx, melhor_dy = dx, dy
+    return melhor_dx, melhor_dy, menor_custo
+
+def preparar(referencia, teste):
+    # Aula_2/exemplo_03_gaussiano.py, linhas 14-19: suavizacao leve.
+    ref_suave = cv2.GaussianBlur(referencia, (3, 3), 0)
+    teste_suave = cv2.GaussianBlur(teste, (3, 3), 0)
+    dx, dy, custo = alinhar_busca_local(ref_suave, teste_suave)
+    altura, largura = teste.shape
     matriz = np.float32([[1, 0, dx], [0, 1, dy]])
-    alinhada = cv2.warpAffine(teste, matriz, (w, h), flags=cv2.INTER_NEAREST,
-                              borderMode=cv2.BORDER_CONSTANT, borderValue=0)
-    valido = cv2.warpAffine(np.full_like(teste, 255), matriz, (w, h),
-                            flags=cv2.INTER_NEAREST, borderMode=cv2.BORDER_CONSTANT,
+    # Aplica o deslocamento apenas uma vez sobre a imagem original.
+    alinhada = cv2.warpAffine(teste, matriz, (largura, altura),
+                              flags=cv2.INTER_NEAREST, borderValue=0)
+    valido = cv2.warpAffine(np.full_like(teste, 255), matriz,
+                            (largura, altura), flags=cv2.INTER_NEAREST,
                             borderValue=0)
-    return alinhada, valido, dx, dy, melhor[0]
-
-
-def preparar(referencia, teste, metodo="sad", raio=4):
-    # Pequena suavização somente para a função de custo do alinhamento.
-    a = cv2.GaussianBlur(referencia, (3, 3), 0)
-    b = cv2.GaussianBlur(teste, (3, 3), 0)
-    _, _, dx, dy, custo = alinhar_busca_local(a, b, raio=raio, metodo=metodo)
-    h, w = teste.shape
-    m = np.float32([[1, 0, dx], [0, 1, dy]])
-    alinhada = cv2.warpAffine(teste, m, (w, h), flags=cv2.INTER_NEAREST,
-                              borderMode=cv2.BORDER_CONSTANT, borderValue=0)
-    valido = cv2.warpAffine(np.full_like(teste, 255), m, (w, h),
-                            flags=cv2.INTER_NEAREST, borderMode=cv2.BORDER_CONSTANT, borderValue=0)
     return alinhada, valido, dx, dy, custo
-
 
 # =============================================================================
 # Detecção de esporas
